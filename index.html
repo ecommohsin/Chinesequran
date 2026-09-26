@@ -197,18 +197,43 @@
         .chinese {
             font-family: "Noto Sans SC", sans-serif;
             font-size: 17px;
-            line-height: 2.15;
+            line-height: 1.35;
             margin: 12px 0 0;
             color: #d7dde3;
         }
 
-        .ar-word,
         .zh-word {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: top;
+            margin: 0 0.35em 0.85em;
+            border-radius: 4px;
+            max-width: 9.5em;
+        }
+
+        .zh-surface {
+            text-align: center;
+        }
+
+        .zh-en {
+            font-family: Inter, sans-serif;
+            font-size: 11px;
+            line-height: 1.25;
+            color: var(--muted);
+            text-align: center;
+            margin-top: 3px;
+        }
+
+        .ar-word {
             border-radius: 4px;
         }
 
         .has-meaning {
             cursor: help;
+        }
+
+        .zh-word.has-meaning .zh-surface {
             border-bottom: 1px dotted rgba(44, 164, 171, 0.4);
         }
 
@@ -590,10 +615,14 @@
             return segmentChinese(text).map((token) => {
                 if (!token.han) return escapeHtml(token.text);
                 const inner = toRuby(token.text);
-                if (!token.en) {
-                    return `<span class="zh-word">${inner}</span>`;
-                }
-                return `<span class="zh-word has-meaning" data-word="${escapeHtml(token.text)}" data-en="${escapeHtml(token.en)}" data-tr="${escapeHtml(pinyinOf(token.text))}">${inner}</span>`;
+                const english = token.en
+                    ? `<span class="zh-en">${escapeHtml(token.en)}</span>`
+                    : "";
+                const meaningClass = token.en ? " has-meaning" : "";
+                const meaningData = token.en
+                    ? ` data-word="${escapeHtml(token.text)}" data-en="${escapeHtml(token.en)}" data-tr="${escapeHtml(pinyinOf(token.text))}"`
+                    : "";
+                return `<span class="zh-word${meaningClass}"${meaningData}><span class="zh-surface">${inner}</span>${english}</span>`;
             }).join("");
         }
 
