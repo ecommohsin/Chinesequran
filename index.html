@@ -6,7 +6,7 @@
     <title>Quran Player</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600&family=Noto+Naskh+Arabic:wght@400;600&family=Noto+Sans+SC:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #0b0f12;
@@ -45,36 +45,29 @@
             background: color-mix(in srgb, var(--bg) 88%, transparent);
             backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--line);
-            padding: 16px 0 14px;
+            padding: 10px 0 12px;
         }
 
-        .topbar {
+        .chrome {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 14px;
+            gap: 8px 10px;
         }
 
-        .brand {
+        .chrome audio {
+            flex: 1 1 100%;
+            width: 100%;
             margin: 0;
-            font-size: 18px;
-            font-weight: 600;
-            letter-spacing: -0.03em;
+            color-scheme: dark;
         }
 
-        .pills {
-            display: flex;
-            padding: 3px;
-            border-radius: 999px;
-            background: var(--panel-2);
-        }
-
-        .pills button {
+        #options-toggle,
+        #surah-chip {
             appearance: none;
-            border: 0;
-            background: transparent;
-            color: var(--muted);
+            border: 1px solid var(--line);
+            background: var(--panel-2);
+            color: var(--ink);
             font: inherit;
             font-size: 13px;
             font-weight: 500;
@@ -83,22 +76,47 @@
             cursor: pointer;
         }
 
-        .pills button.active {
+        #options-toggle[aria-expanded="true"] {
             background: #fff;
             color: #111;
         }
 
-        .surah-row,
-        .tools {
+        #options-panel {
+            margin-top: 12px;
+            padding: 14px 16px 16px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+        }
+
+        .options-grid { display: grid; gap: 12px; }
+
+        .option-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px 16px;
+            gap: 8px 14px;
             align-items: center;
         }
 
-        .surah-row { margin-bottom: 12px; }
+        .option-block h2 {
+            margin: 4px 0 0;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
 
         label { color: var(--muted); font-size: 13px; }
+
+        .check {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--ink);
+            font-size: 13px;
+            user-select: none;
+        }
 
         select {
             font: inherit;
@@ -109,12 +127,6 @@
             border-radius: 10px;
             padding: 8px 10px;
             max-width: min(100%, 420px);
-        }
-
-        audio {
-            width: 100%;
-            margin: 4px 0 12px;
-            color-scheme: dark;
         }
 
         .speed {
@@ -139,17 +151,8 @@
             font-weight: 500;
         }
 
-        .check {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: var(--muted);
-            font-size: 13px;
-            user-select: none;
-        }
-
         .status {
-            margin: 10px 0 0;
+            margin: 0;
             font-size: 13px;
             color: var(--muted);
         }
@@ -192,6 +195,25 @@
             font-size: 15px;
             line-height: 1.7;
             font-style: italic;
+        }
+
+        .translation,
+        .english {
+            font-size: 17px;
+            line-height: 1.75;
+            margin: 12px 0 0;
+            color: #d7dde3;
+        }
+
+        .translation.zh {
+            font-family: "Noto Sans SC", sans-serif;
+            line-height: 1.35;
+        }
+
+        .translation.ur {
+            font-family: "Noto Naskh Arabic", Amiri, serif;
+            direction: rtl;
+            text-align: right;
         }
 
         .chinese {
@@ -292,59 +314,105 @@
             color: var(--muted);
         }
 
-        body.view-arabic .transliteration,
-        body.view-arabic .chinese,
-        body.view-arabic .footnotes,
-        body.view-chinese .arabic,
-        body.view-chinese .transliteration,
-        body.view-chinese .footnotes {
-            display: none;
-        }
+        body:not(.show-arabic) .arabic { display: none; }
+        body:not(.show-ar-translit) .transliteration { display: none; }
+        body:not(.show-translation) .translation { display: none; }
+        body:not(.show-english) .english { display: none; }
+        body.is-chinese.zh-continuous .translation-wfw { display: none; }
+        body.is-chinese:not(.zh-continuous) .translation-text { display: none; }
+        body:not(.is-chinese) .translation-wfw { display: none; }
 
         @media (max-width: 640px) {
             .arabic { font-size: 28px; }
-            .topbar { flex-direction: column; align-items: flex-start; }
         }
     </style>
 </head>
-<body class="view-all">
+<body class="show-arabic show-translation show-pinyin is-chinese">
     <div class="app">
         <div class="controls">
-            <div class="topbar">
-                <h1 class="brand">Quran Player</h1>
-                <div class="pills" role="tablist" aria-label="Text view">
-                    <button type="button" data-view="all" class="active">All</button>
-                    <button type="button" data-view="arabic">Arabic</button>
-                    <button type="button" data-view="chinese">Chinese</button>
+            <div class="chrome">
+                <button type="button" id="options-toggle" aria-expanded="false" aria-controls="options-panel">Options</button>
+                <button type="button" id="surah-chip">18. Al-Kahf</button>
+                <audio id="quran-audio" controls></audio>
+            </div>
+
+            <div id="options-panel" hidden>
+                <div class="options-grid">
+                    <p class="status" id="status">Loading verses…</p>
+
+                    <div class="option-row">
+                        <label for="surah">Surah</label>
+                        <select id="surah"></select>
+                    </div>
+
+                    <div class="option-row">
+                        <div class="speed">
+                            <label for="speed">Speed</label>
+                            <input id="speed" type="range" min="0.3" max="2.0" step="0.1" value="1.0">
+                            <span id="speed-value">1.0x</span>
+                        </div>
+                    </div>
+
+                    <div class="option-row">
+                        <label for="audio-lang">Audio</label>
+                        <select id="audio-lang">
+                            <option value="arabic" selected>Arabic recitation</option>
+                            <option value="chinese">Chinese translation</option>
+                        </select>
+                        <label class="check">
+                            <input type="checkbox" id="repeat-verse"> Repeat verse
+                        </label>
+                    </div>
+
+                    <div class="option-block">
+                        <h2>Text</h2>
+                    </div>
+
+                    <div class="option-row">
+                        <label class="check">
+                            <input type="checkbox" id="opt-arabic" checked> Arabic text
+                        </label>
+                        <label class="check">
+                            <input type="checkbox" id="opt-ar-translit"> Arabic transliteration
+                        </label>
+                    </div>
+
+                    <div class="option-row">
+                        <label class="check">
+                            <input type="checkbox" id="opt-translation" checked> Translation
+                        </label>
+                        <select id="opt-translation-lang" aria-label="Translation language">
+                            <option value="chinese" selected>Chinese</option>
+                            <option value="urdu">Urdu</option>
+                            <option value="turkish">Turkish</option>
+                        </select>
+                    </div>
+
+                    <div class="option-row" id="zh-layout-row">
+                        <span style="color: var(--muted); font-size: 13px;">Chinese layout</span>
+                        <label class="check"><input type="radio" name="zh-layout" value="continuous"> Continuous text</label>
+                        <label class="check"><input type="radio" name="zh-layout" value="simple" checked> Simplified word for word</label>
+                        <label class="check"><input type="radio" name="zh-layout" value="detailed"> Detailed word for word</label>
+                    </div>
+
+                    <div class="option-row" id="pinyin-row">
+                        <label class="check">
+                            <input type="checkbox" id="opt-pinyin" checked> Pinyin
+                        </label>
+                    </div>
+
+                    <div class="option-row">
+                        <label class="check">
+                            <input type="checkbox" id="opt-english"> English translation
+                        </label>
+                        <select id="opt-english-edition" aria-label="English edition">
+                            <option value="en.sahih" selected>Sahih International</option>
+                            <option value="en.pickthall">Pickthall</option>
+                            <option value="en.yusufali">Yusuf Ali</option>
+                        </select>
+                    </div>
                 </div>
             </div>
-
-            <div class="surah-row">
-                <label for="surah">Surah</label>
-                <select id="surah"></select>
-            </div>
-
-            <audio id="quran-audio" controls></audio>
-
-            <div class="tools">
-                <div class="speed">
-                    <label for="speed">Speed</label>
-                    <input id="speed" type="range" min="0.3" max="2.0" step="0.1" value="1.0">
-                    <span id="speed-value">1.0x</span>
-                </div>
-
-                <label for="audio-lang">Audio</label>
-                <select id="audio-lang">
-                    <option value="arabic" selected>Arabic recitation</option>
-                    <option value="chinese">Chinese translation</option>
-                </select>
-
-                <label class="check">
-                    <input type="checkbox" id="repeat-verse"> Repeat verse
-                </label>
-            </div>
-
-            <p class="status" id="status">Loading verses…</p>
         </div>
 
         <div id="playlist"></div>
@@ -476,12 +544,24 @@
 
         const audio = document.getElementById("quran-audio");
         const surahSelect = document.getElementById("surah");
+        const surahChip = document.getElementById("surah-chip");
+        const optionsToggle = document.getElementById("options-toggle");
+        const optionsPanel = document.getElementById("options-panel");
         const speedSlider = document.getElementById("speed");
         const speedValue = document.getElementById("speed-value");
         const audioLangSelect = document.getElementById("audio-lang");
         const repeatVerse = document.getElementById("repeat-verse");
         const statusEl = document.getElementById("status");
         const playlist = document.getElementById("playlist");
+        const optArabic = document.getElementById("opt-arabic");
+        const optArTranslit = document.getElementById("opt-ar-translit");
+        const optTranslation = document.getElementById("opt-translation");
+        const optTranslationLang = document.getElementById("opt-translation-lang");
+        const optPinyin = document.getElementById("opt-pinyin");
+        const optEnglish = document.getElementById("opt-english");
+        const optEnglishEdition = document.getElementById("opt-english-edition");
+        const zhLayoutRow = document.getElementById("zh-layout-row");
+        const pinyinRow = document.getElementById("pinyin-row");
 
         let verses = [];
         let currentIndex = 0;
@@ -547,6 +627,24 @@
             return (chosen.join("; ") || String(text)).slice(0, 80);
         }
 
+        function simpleMeaning(text) {
+            const raw = String(text)
+                .replace(/\([^)]*\)/g, " ")
+                .replace(/\[[^\]]*\]/g, " ")
+                .split(/[;,/]/)[0]
+                .replace(/^(to |the |a |an |one's |one |sb's )/i, "")
+                .replace(/\s+/g, " ")
+                .trim();
+            const skip = /^(variant|see|used|literary|archaic|dialect|particle|pronoun|bound|grammar)$/i;
+            const words = raw.split(" ").filter((word) => word && !skip.test(word));
+            return words.slice(0, 2).join(" ");
+        }
+
+        function zhLayout() {
+            const selected = document.querySelector("input[name='zh-layout']:checked");
+            return selected ? selected.value : "simple";
+        }
+
         function speedRate() {
             return Number.parseFloat(speedSlider.value);
         }
@@ -571,7 +669,8 @@
             return pinyinFn(text, { toneType: "symbol", type: "string", nonZh: "consecutive" });
         }
 
-        function toRuby(text) {
+        function toRuby(text, withPinyin) {
+            if (!withPinyin) return escapeHtml(text);
             return Array.from(text).map((ch) => {
                 if (!/\p{Script=Han}/u.test(ch)) {
                     return escapeHtml(ch);
@@ -604,26 +703,45 @@
                 tokens.push({
                     text: match,
                     han: true,
-                    en: tidyMeaning(cedict.get(match) || "")
+                    enDetailed: tidyMeaning(cedict.get(match) || ""),
+                    enSimple: simpleMeaning(cedict.get(match) || "")
                 });
                 i += Array.from(match).length;
             }
             return tokens;
         }
 
-        function renderChinese(text) {
-            return segmentChinese(text).map((token) => {
+        function renderChineseContinuous(text, withPinyin) {
+            return `<p class="translation translation-text zh">${toRuby(text, withPinyin)}</p>`;
+        }
+
+        function renderChinese(text, layout, withPinyin) {
+            if (layout === "continuous") {
+                return renderChineseContinuous(text, withPinyin);
+            }
+            return `<p class="translation translation-wfw zh chinese">${segmentChinese(text).map((token) => {
                 if (!token.han) return escapeHtml(token.text);
-                const inner = toRuby(token.text);
-                const english = token.en
-                    ? `<span class="zh-en">${escapeHtml(token.en)}</span>`
+                const meaning = layout === "detailed" ? token.enDetailed : token.enSimple;
+                const inner = toRuby(token.text, withPinyin);
+                const english = meaning
+                    ? `<span class="zh-en">${escapeHtml(meaning)}</span>`
                     : "";
-                const meaningClass = token.en ? " has-meaning" : "";
-                const meaningData = token.en
-                    ? ` data-word="${escapeHtml(token.text)}" data-en="${escapeHtml(token.en)}" data-tr="${escapeHtml(pinyinOf(token.text))}"`
+                const meaningClass = meaning ? " has-meaning" : "";
+                const meaningData = meaning
+                    ? ` data-word="${escapeHtml(token.text)}" data-en="${escapeHtml(layout === "detailed" ? token.enDetailed : token.enSimple)}" data-tr="${escapeHtml(pinyinOf(token.text))}"`
                     : "";
                 return `<span class="zh-word${meaningClass}"${meaningData}><span class="zh-surface">${inner}</span>${english}</span>`;
-            }).join("");
+            }).join("")}</p>`;
+        }
+
+        function renderTranslation(verse) {
+            const lang = optTranslationLang.value;
+            const text = verse.translation || "";
+            if (lang === "chinese") {
+                return renderChinese(text, zhLayout(), optPinyin.checked);
+            }
+            const klass = lang === "urdu" ? "translation translation-text ur" : "translation translation-text";
+            return `<p class="${klass}">${escapeHtml(text)}</p>`;
         }
 
         function renderArabic(verse) {
@@ -707,12 +825,23 @@
             statusEl.classList.toggle("error", Boolean(isError));
         }
 
-        function setView(view) {
-            document.body.classList.remove("view-all", "view-arabic", "view-chinese");
-            document.body.classList.add(`view-${view}`);
-            document.querySelectorAll(".pills button").forEach((button) => {
-                button.classList.toggle("active", button.dataset.view === view);
-            });
+        function updateSurahChip() {
+            const selected = surahSelect.selectedOptions[0];
+            surahChip.textContent = selected ? selected.textContent.split(" — ")[0] : "Surah";
+        }
+
+        function applyDisplayClasses() {
+            const lang = optTranslationLang.value;
+            const layout = zhLayout();
+            document.body.classList.toggle("show-arabic", optArabic.checked);
+            document.body.classList.toggle("show-ar-translit", optArTranslit.checked);
+            document.body.classList.toggle("show-translation", optTranslation.checked);
+            document.body.classList.toggle("show-pinyin", optPinyin.checked);
+            document.body.classList.toggle("show-english", optEnglish.checked);
+            document.body.classList.toggle("is-chinese", lang === "chinese");
+            document.body.classList.toggle("zh-continuous", layout === "continuous");
+            zhLayoutRow.hidden = lang !== "chinese";
+            pinyinRow.hidden = lang !== "chinese";
         }
 
         function highlightVerse() {
@@ -740,6 +869,7 @@
         }
 
         function renderVerses() {
+            applyDisplayClasses();
             playlist.innerHTML = verses.map((verse, index) => {
                 const footnotes = verse.footnotes
                     ? `<p class="footnotes">${escapeHtml(verse.footnotes)}</p>`
@@ -747,16 +877,27 @@
                 const transliteration = verse.transliteration
                     ? `<p class="transliteration">${escapeHtml(verse.transliteration)}</p>`
                     : "";
+                const english = verse.english
+                    ? `<p class="english">${escapeHtml(verse.english)}</p>`
+                    : "";
                 return `
                     <div class="verse" data-index="${index}">
                         <div class="verse-meta">${verse.sura}:${verse.aya}</div>
                         <p class="arabic">${renderArabic(verse)}</p>
                         ${transliteration}
-                        <p class="chinese">${renderChinese(verse.translation)}</p>
+                        ${renderTranslation(verse)}
+                        ${english}
                         ${footnotes}
                     </div>
                 `;
             }).join("");
+        }
+
+        async function fetchAlquran(suraNumber, edition) {
+            const response = await fetch(`https://api.alquran.cloud/v1/surah/${suraNumber}/${edition}`);
+            if (!response.ok) return [];
+            const data = await response.json();
+            return (data.data && data.data.ayahs) || [];
         }
 
         async function loadSurah(suraNumber, playFirst) {
@@ -769,10 +910,22 @@
             audio.load();
 
             try {
-                const [zhRes, trRes, arabicWords] = await Promise.all([
+                const lang = optTranslationLang.value;
+                const extraEdition = lang === "urdu"
+                    ? "ur.jalandhry"
+                    : lang === "turkish"
+                        ? "tr.diyanet"
+                        : "";
+                const [zhRes, trRes, arabicWords, englishAyahs, extraAyahs] = await Promise.all([
                     fetch(`https://quranenc.com/api/v1/translation/sura/chinese_suliman/${suraNumber}`),
                     fetch(`https://api.alquran.cloud/v1/surah/${suraNumber}/en.transliteration`),
-                    fetchArabicWords(suraNumber).catch(() => ({}))
+                    fetchArabicWords(suraNumber).catch(() => ({})),
+                    optEnglish.checked
+                        ? fetchAlquran(suraNumber, optEnglishEdition.value)
+                        : Promise.resolve([]),
+                    extraEdition
+                        ? fetchAlquran(suraNumber, extraEdition)
+                        : Promise.resolve([])
                 ]);
                 if (!zhRes.ok) {
                     throw new Error(`QuranEnc returned ${zhRes.status}`);
@@ -783,15 +936,22 @@
                     const trData = await trRes.json();
                     transliterations = (trData.data && trData.data.ayahs) || [];
                 }
-                verses = (zhData.result || []).map((item, index) => ({
-                    sura: Number(item.sura),
-                    aya: Number(item.aya),
-                    arabic_text: item.arabic_text || "",
-                    words: arabicWords[Number(item.aya)] || [],
-                    transliteration: (transliterations[index] && transliterations[index].text) || "",
-                    translation: item.translation || "",
-                    footnotes: item.footnotes || ""
-                }));
+                verses = (zhData.result || []).map((item, index) => {
+                    let translation = item.translation || "";
+                    if (lang === "urdu" || lang === "turkish") {
+                        translation = (extraAyahs[index] && extraAyahs[index].text) || translation;
+                    }
+                    return {
+                        sura: Number(item.sura),
+                        aya: Number(item.aya),
+                        arabic_text: item.arabic_text || "",
+                        words: arabicWords[Number(item.aya)] || [],
+                        transliteration: (transliterations[index] && transliterations[index].text) || "",
+                        translation,
+                        english: (englishAyahs[index] && englishAyahs[index].text) || "",
+                        footnotes: item.footnotes || ""
+                    };
+                });
                 if (!verses.length) {
                     throw new Error("No verses returned");
                 }
@@ -801,6 +961,7 @@
                     `${surah ? surah[1] : "Surah"} · ${verses.length} verses · hover a word for English`,
                     false
                 );
+                updateSurahChip();
                 loadVerseAudio(0, playFirst);
             } catch (error) {
                 setStatus(`Could not load verses: ${error.message}`, true);
@@ -816,6 +977,7 @@
         });
 
         surahSelect.addEventListener("change", () => {
+            updateSurahChip();
             loadSurah(surahSelect.value, false);
         });
 
@@ -825,9 +987,46 @@
             loadVerseAudio(currentIndex, !audio.paused);
         });
 
-        document.querySelector(".pills").addEventListener("click", (event) => {
-            const button = event.target.closest("button[data-view]");
-            if (button) setView(button.dataset.view);
+        optionsToggle.addEventListener("click", () => {
+            const open = optionsPanel.hidden;
+            optionsPanel.hidden = !open;
+            optionsToggle.setAttribute("aria-expanded", String(open));
+        });
+
+        surahChip.addEventListener("click", () => {
+            if (optionsPanel.hidden) optionsToggle.click();
+            surahSelect.focus();
+        });
+
+        [optArabic, optArTranslit, optTranslation].forEach((input) => {
+            input.addEventListener("change", () => {
+                applyDisplayClasses();
+            });
+        });
+
+        optPinyin.addEventListener("change", () => {
+            applyDisplayClasses();
+            if (verses.length) renderVerses();
+        });
+
+        document.querySelectorAll("input[name='zh-layout']").forEach((input) => {
+            input.addEventListener("change", () => {
+                if (verses.length) renderVerses();
+            });
+        });
+
+        optTranslationLang.addEventListener("change", () => {
+            applyDisplayClasses();
+            loadSurah(surahSelect.value, false);
+        });
+
+        optEnglish.addEventListener("change", () => {
+            applyDisplayClasses();
+            loadSurah(surahSelect.value, false);
+        });
+
+        optEnglishEdition.addEventListener("change", () => {
+            if (optEnglish.checked) loadSurah(surahSelect.value, false);
         });
 
         audio.addEventListener("loadedmetadata", applySpeed);
@@ -866,6 +1065,8 @@
         window.addEventListener("scroll", hideMeaningTip, { passive: true });
 
         applySpeed();
+        applyDisplayClasses();
+        updateSurahChip();
         loadCedict()
             .catch(() => setStatus("Chinese hover dictionary could not load.", true))
             .finally(() => loadSurah(surahSelect.value, false));
